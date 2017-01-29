@@ -7,6 +7,13 @@ class Slim extends HTMLElement {
         document.registerElement(tag, clazz)
     }
 
+    static get interactionEventNames() {
+        return ['click','mouseover','mouseout','mousemove','mouseenter','mousedown','mouseup','dblclick','contextmenu','wheel',
+            'mouseleave','select','pointerlockchange','pointerlockerror','focus','blur',
+            'animationstart','animationend','animationiteration','reset','submit','resize','scroll',
+            'keydown','keypress','keyup', 'change']
+    }
+
     static plugin(phase, plugin) {
         if (phase !== 'create' && phase !== 'beforeRender' && phase !== 'afterRender' && phase !== 'beforeDestroy') {
             throw "Supported phase can be create, beforeDestroy, beforeRender or afterRender only"
@@ -91,6 +98,11 @@ class Slim extends HTMLElement {
         this._bindings = this._bindings || {}
         this._boundParent = this._boundParent || this
         this.__bind(descriptor)
+    }
+
+    attributeChangedCallback(attr, val) {
+        this[Slim.__dashToCamel(attr)] = val
+        super.attributeChangedCallback && super.attributeChangedCallback.apply(this, arguments)
     }
 
     callAttribute(attributeName, value) {
@@ -244,6 +256,9 @@ class Slim extends HTMLElement {
     }
 
     initialize(forceNewVirtualDOM = false) {
+        if (Slim.autoAttachInteractionEvents) Slim.interactionEventNames.forEach(eventType => {
+            this.addEventListener(eventType, e => { this.handleEvent(e) })
+        })
         this._bindings = this._bindings || {}
         this._boundChildren = this._boundChildren || []
         this.alternateTemplate = this.alternateTemplate || null
@@ -255,6 +270,14 @@ class Slim extends HTMLElement {
 
     get isSlim() { return true }
     get template() { return null }
+
+    handleEvent(e) {
+        if (this.hasAttribute('on' + e.type)) {
+            this.callAttribute('on' + e.type, e)
+        } else if (this.hasAttribute(e.type)) {
+            this.callAttribute(e.type, e)
+        }
+    }
 
     onDestroy() { /* abstract */ }
     onBeforeCreated() { /* abstract */ }
@@ -323,6 +346,7 @@ class Slim extends HTMLElement {
             if (child.attributes) for (let i = 0; i < child.attributes.length; i++) {
                 let desc = Slim.__processAttribute(child.attributes[i], child)
                 if (desc) descriptors.push(desc)
+                child[Slim.__dashToCamel(child.attributes[i].nodeName)] = child.attributes[i].nodeValue
                 if (child.attributes[i].nodeName.indexOf('#') == '0') {
                     let refName = child.attributes[i].nodeName.slice(1)
                     this[refName] = child
@@ -339,8 +363,6 @@ class Slim extends HTMLElement {
                 descriptor => {
                     if (descriptor.type === 'P' || descriptor.type === 'M') {
                         this.__bind(descriptor)
-                    } else if (descriptor.type === 'I') {
-                        Slim.__inject(descriptor)
                     } else if (descriptor.type === 'R') {
                         Slim.__createRepeater(descriptor)
                         this.__bind(descriptor)
@@ -353,6 +375,9 @@ class Slim extends HTMLElement {
 
         for (let child of allChildren) {
             let match = child.innerText.match(/\[\[([\w|.]+)\]\]/g)
+            if (match && child.children.length > 0) {
+                throw 'Bind Error: Illegal bind attribute use on element type ' + child.localName + ' with nested children.\n' + child.outerHTML;
+            }
             if (match) {
                 let properties = []
                 for (let i = 0; i < match.length; i++) {
@@ -459,6 +484,7 @@ class SlimRepeater extends Slim {
     }
 }
 Slim.tag('slim-repeat', SlimRepeater)
+
 window.SlimRepeater = SlimRepeater
 window.Slim = Slim
 

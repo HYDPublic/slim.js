@@ -20,7 +20,7 @@ Slim.tag('s-table', class extends Slim {
     }
 
     update() {
-        this.columnNames.forEach( columnName => {
+        this.columnNames && this.columnNames.forEach( columnName => {
             let tdElement = document.createElement('th')
             tdElement.innerHTML = columnName
             this.header.appendChild(tdElement)

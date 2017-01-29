@@ -3,7 +3,7 @@
  *
  * s-button
  */
-Slim.tag('s-button', class extends SlimUIBase {
+Slim.tag('s-button', class extends Slim {
 
     get template() {
         return `<input slim-id="myControl" type="button" value=[[text]] />`
@@ -21,7 +21,7 @@ Slim.tag('s-button', class extends SlimUIBase {
  *
  * s-input
  */
-Slim.tag('s-input', class extends SlimUIBase {
+Slim.tag('s-input', class extends Slim {
 
     get template() {
         return '<s-input-model slim-id="model"></s-input-model><input slim-id="myControl" type=[[type]] placeholder=[[placeholder]] />'
@@ -37,8 +37,11 @@ Slim.tag('s-input', class extends SlimUIBase {
     }
 
     onCreated() {
-        this.type = this.getAttribute('type')
-        this.placeholder = this.getAttribute('placeholder')
+        Slim.interactionEventNames.forEach(e => {
+            this.myControl['on' + e] = evt => {
+                this.callAttribute('on' + e, evt)
+            }
+        })
     }
 
 })

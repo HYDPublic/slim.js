@@ -36,8 +36,8 @@
     <slim-ui-test>
         <!--<s-resource url="https://cdn.rawgit.com/angular/angular-phonecat/master/app/phones/dell-streak-7.json" ondata="testOnData" format="json"></s-resource>-->
         <s-hgroup>
-            <s-input focus="testFocus" blur="testBlur" placeholder="type anything"></s-input>
-            <s-button text="Hello" click="testClick" mouseenter="testMouseover"></s-button>
+            <s-input onfocus="testFocus" onblur="testBlur" placeholder="type anything"></s-input>
+            <s-button text="Hello" onclick="testClick" onmouseenter="testMouseover"></s-button>
             <div bind>[[myText]]</div>
         </s-hgroup>
     </slim-ui-test>
